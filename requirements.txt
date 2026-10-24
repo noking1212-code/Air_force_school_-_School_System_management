@@ -1,0 +1,60 @@
+
+# ============================================================
+ STUDENT RESULT MANAGEMENT SYSTEM
+ Class XII - CBSE Computer Science Project
+ Academic Session: 2026-2027
+# ============================================================
+
+# ---------------- PROJECT INFORMATION ------------------------
+ Project Name : Student Result Management System
+ Language     : Python
+ Database     : MySQL
+ Interface    : Command-Line Interface (CLI)
+ Editor       : Visual Studio Code
+ Board        : Central Board of Secondary Education (CBSE)
+
+# ---------------- SYSTEM REQUIREMENTS ------------------------
+ Operating System : Windows 10 / Windows 11
+ Processor        : Intel Core i3 or equivalent
+ RAM              : Minimum 4 GB
+ Storage          : Minimum 500 MB free space
+ Display          : Standard monitor
+ Keyboard         : Standard keyboard
+ Mouse            : Standard mouse
+
+# ---------------- SOFTWARE REQUIREMENTS ----------------------
+ Python           : Python 3.x
+ Database Server  : MySQL 8.0 or compatible
+ Code Editor      : Visual Studio Code
+ Terminal         : Windows Command Prompt / PowerShell
+ Database Client  : MySQL Workbench (optional)
+
+# ---------------- PYTHON DEPENDENCIES ------------------------
+# MySQL database connectivity
+ mysql-connector-python
+
+# Colourful terminal headings and messages
+ colorama
+
+# ---------------- PROJECT MODULES ----------------------------
+ main.py       : Main menu and program execution
+ database.py  : Database connection
+ students.py  : Student record management
+ exams.py     : Examination management
+ results.py   : Marks entry and result calculation
+ schema.sql   : Database table creation
+ demo_data.sql: Sample records for demonstration
+
+# ---------------- DATABASE REQUIREMENTS ----------------------
+ Database Name : student_result_system
+ Tables        : students, subjects, exams, exam_subjects, marks
+ Database      : MySQL
+ Connectivity  : mysql-connector-python
+
+# ---------------- INSTALLATION -------------------------------
+# Run the following command in the terminal:
+ pip install -r requirements.txt
+
+# ============================================================
+# END OF REQUIREMENTS
+# ============================================================
