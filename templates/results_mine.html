@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block title %}My results — Airforce School{% endblock %}{% block content %}
+<section class="dash-shell">
+{% include '_sidebar.html' %}
+<div class="dash-content"><div class="dash-heading"><div><span class="eyebrow">ACADEMIC SNAPSHOT</span><h1>{{ 'Family results' if is_parent else 'My results' }} <span>✳</span></h1><p>{{ 'Scores for students linked to your parent account.' if is_parent else 'Every result recorded for your account.' }}</p></div></div>
+<section class="table-panel"><div class="panel-heading"><div><h2>All recorded scores</h2><p>{{ results|length }} entries</p></div></div>
+<div class="table-scroll"><table><thead><tr>{% if is_parent %}<th>Student</th>{% endif %}<th>Subject</th><th>Term</th><th>Score</th><th>Progress</th></tr></thead><tbody>{% for row in results %}<tr>{% if is_parent %}<td><strong>{{ row.full_name }}</strong></td>{% endif %}<td><strong>{{ row.subject_name }}</strong></td><td>{{ row.term }}</td><td>{{ row.score }} / {{ row.max_score }}</td><td>{{ ((row.score / row.max_score) * 100)|round|int }}%</td></tr>{% else %}<tr><td colspan="{{ 5 if is_parent else 4 }}">No results are available yet.</td></tr>{% endfor %}</tbody></table></div></section>
+</div></section>{% endblock %}

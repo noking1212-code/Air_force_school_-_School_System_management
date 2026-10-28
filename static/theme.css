@@ -1,0 +1,252 @@
+/* Theme control */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #dfe5ed;
+  border-radius: 9px;
+  background: #f6f8fb;
+  color: #253247;
+  font: 600 12px var(--font);
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.theme-toggle:hover { background: #edf2f8; border-color: #b9c7d8; }
+.theme-icon { font-size: 17px; line-height: 1; }
+.theme-toggle:focus-visible { outline: 3px solid #79aef5; outline-offset: 2px; }
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e8eef7;
+  --muted: #aab6c7;
+  --purple: #86b8ff;
+  --violet: #b0ccf4;
+  --line: #2c3a4d;
+  --paper: #111a27;
+  --wash: #172231;
+  --mint: #74d5b1;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .dash-shell { background: var(--paper); color: var(--ink); }
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] footer,
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .table-panel,
+html[data-theme="dark"] .calendar-panel,
+html[data-theme="dark"] .calendar-toolbar,
+html[data-theme="dark"] .about-card,
+html[data-theme="dark"] .about-list,
+html[data-theme="dark"] .notice-card,
+html[data-theme="dark"] .login-panel,
+html[data-theme="dark"] .art-card,
+html[data-theme="dark"] .floating-note,
+html[data-theme="dark"] .today-chip,
+html[data-theme="dark"] .date-filter,
+html[data-theme="dark"] .calendar-event,
+html[data-theme="dark"] .mini-stat,
+html[data-theme="dark"] .dash-stat {
+  background-color: #192536;
+  border-color: var(--line);
+  color: var(--ink);
+}
+html[data-theme="dark"] .topbar { background: #111a27ed; border-bottom-color: var(--line); }
+html[data-theme="dark"] footer { border-top-color: var(--line); color: #9aa8ba; }
+html[data-theme="dark"] .dash-shell,
+html[data-theme="dark"] .trust-strip { background: #141f2d; }
+html[data-theme="dark"] .trust-strip,
+html[data-theme="dark"] .calendar-weekdays { border-color: var(--line); color: #aab6c7; }
+html[data-theme="dark"] .topbar nav,
+html[data-theme="dark"] .nav-login,
+html[data-theme="dark"] .side-link,
+html[data-theme="dark"] .section-heading > p,
+html[data-theme="dark"] .dash-heading p,
+html[data-theme="dark"] .login-visual p,
+html[data-theme="dark"] .login-panel > p,
+html[data-theme="dark"] .back-link,
+html[data-theme="dark"] .page-hero p,
+html[data-theme="dark"] .about-card p,
+html[data-theme="dark"] .about-list span,
+html[data-theme="dark"] .notice-card p,
+html[data-theme="dark"] .notice-body,
+html[data-theme="dark"] .event-description,
+html[data-theme="dark"] .calendar-legend,
+html[data-theme="dark"] .person-info small,
+html[data-theme="dark"] .status-select,
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .tiny-label,
+html[data-theme="dark"] .card-dot,
+html[data-theme="dark"] .progress-heading,
+html[data-theme="dark"] .panel-heading p,
+html[data-theme="dark"] .dash-stat > span,
+html[data-theme="dark"] .dash-stat small,
+html[data-theme="dark"] .secure-note,
+html[data-theme="dark"] .calendar-toolbar h2 span {
+  color: #aab6c7;
+}
+html[data-theme="dark"] .eyebrow,
+html[data-theme="dark"] .progress-heading span:last-child,
+html[data-theme="dark"] .calendar-arrow,
+html[data-theme="dark"] .text-button,
+html[data-theme="dark"] .text-button span { color: #9bc3ff; }
+html[data-theme="dark"] .side-link:hover,
+html[data-theme="dark"] .side-link.active { background: #23354b; color: #b9d5ff; }
+html[data-theme="dark"] .panel-heading,
+html[data-theme="dark"] .profile-chip,
+html[data-theme="dark"] .schedule,
+html[data-theme="dark"] .calendar-toolbar,
+html[data-theme="dark"] .calendar-week,
+html[data-theme="dark"] .calendar-day,
+html[data-theme="dark"] .attendance-row { border-color: var(--line); }
+html[data-theme="dark"] th,
+html[data-theme="dark"] .calendar-weekdays { background: #142030; color: #aab6c7; }
+html[data-theme="dark"] td { border-color: #28374b; color: #bac5d4; }
+html[data-theme="dark"] td strong,
+html[data-theme="dark"] .panel-heading h2,
+html[data-theme="dark"] .role-card h3,
+html[data-theme="dark"] .about-card h2,
+html[data-theme="dark"] .notice-card h3,
+html[data-theme="dark"] .schedule strong,
+html[data-theme="dark"] .floating-note strong,
+html[data-theme="dark"] .welcome-row h3,
+html[data-theme="dark"] .person-info strong { color: #edf3fb; }
+html[data-theme="dark"] .role-card,
+html[data-theme="dark"] .student-card,
+html[data-theme="dark"] .teacher-card,
+html[data-theme="dark"] .parent-card,
+html[data-theme="dark"] .visitor-card,
+html[data-theme="dark"] .admin-card {
+  background: linear-gradient(145deg, #1c2b3d, #172332);
+  border-color: #304057;
+}
+html[data-theme="dark"] .role-card p,
+html[data-theme="dark"] .role-no { color: #b0bdce; }
+html[data-theme="dark"] .hero-intro,
+html[data-theme="dark"] .social-proof,
+html[data-theme="dark"] .mini-stat > span,
+html[data-theme="dark"] .mini-stat small,
+html[data-theme="dark"] .schedule small,
+html[data-theme="dark"] .schedule .arrow,
+html[data-theme="dark"] .floating-note small,
+html[data-theme="dark"] .event-description,
+html[data-theme="dark"] .optional-label,
+html[data-theme="dark"] .current-attachment { color: #b8c5d6; }
+html[data-theme="dark"] .brand-accent { color: #8bbaff; }
+html[data-theme="dark"] .login-visual h1 span { color: #9fc4ff; }
+html[data-theme="dark"] .login-decoration { color: #354b69; }
+html[data-theme="dark"] .role-card > a { color: #a6c9ff; }
+html[data-theme="dark"] .role-card:after { background: #ffffff0a; }
+html[data-theme="dark"] .welcome-banner,
+html[data-theme="dark"] .parent-banner {
+  background: linear-gradient(110deg, #1c2a3e, #1a2635);
+  border-color: #304057;
+}
+html[data-theme="dark"] .welcome-banner p { color: #b0bdce; }
+html[data-theme="dark"] .login-page { background: radial-gradient(ellipse at 20% 45%, #243550 0, transparent 55%), #111a27; }
+html[data-theme="dark"] .login-panel label,
+html[data-theme="dark"] .inline-form label,
+html[data-theme="dark"] .contact-panel label { color: #c1ccda; }
+html[data-theme="dark"] .hero:before { background: radial-gradient(circle, #22334a 0, transparent 70%); }
+html[data-theme="dark"] .art-orbit { border-color: #34465f; }
+html[data-theme="dark"] .art-glow { background: radial-gradient(circle, #344a69 0, #273850 46%, transparent 72%); }
+html[data-theme="dark"] .schedule { border-top-color: var(--line); }
+html[data-theme="dark"] .mini-stat { background: #142030; }
+html[data-theme="dark"] .progress-bar { background: #314158; }
+html[data-theme="dark"] .login-icon,
+html[data-theme="dark"] .profile-avatar,
+html[data-theme="dark"] .person-avatar { background: #273b55; color: #b6d2ff; }
+html[data-theme="dark"] .login-panel input,
+html[data-theme="dark"] .inline-form input,
+html[data-theme="dark"] .inline-form select,
+html[data-theme="dark"] .inline-form textarea,
+html[data-theme="dark"] .contact-panel textarea,
+html[data-theme="dark"] .date-filter input,
+html[data-theme="dark"] .status-select select {
+  background: #111a27;
+  border-color: #35455b;
+  color: #e8eef7;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder { color: #8291a5; }
+html[data-theme="dark"] .role-pill { background: #263c56; color: #c1d9ff; }
+html[data-theme="dark"] .flash { background: #26344a; color: #c3d8f5; }
+html[data-theme="dark"] .flash.error { background: #492d35; color: #ffc5c9; }
+html[data-theme="dark"] .flash.success { background: #203e38; color: #ace6d0; }
+html[data-theme="dark"] .calendar-day.outside-month { background: #151f2c; }
+html[data-theme="dark"] .calendar-day.outside-month .day-number,
+html[data-theme="dark"] .day-number { color: #aab6c7; }
+html[data-theme="dark"] .calendar-day.today .day-number { background: #356eae; color: white; }
+html[data-theme="dark"] .calendar-event { background: #22354d; border-left-color: #70a9ee; color: #d4e5ff; }
+html[data-theme="dark"] .calendar-event.holiday { background: #49342f; border-color: #c98c6c; color: #ffd5bd; }
+html[data-theme="dark"] .calendar-event.exam { background: #203c36; border-color: #62b28d; color: #bdebd7; }
+html[data-theme="dark"] .calendar-arrow { border-color: #40536c; }
+html[data-theme="dark"] .calendar-arrow:hover { background: #263950; }
+html[data-theme="dark"] .attendance-pill.present { background: #203e38; color: #ace6d0; }
+html[data-theme="dark"] .attendance-pill.absent { background: #492d35; color: #ffc5c9; }
+html[data-theme="dark"] .button-light { background: #e5efff; color: #15345b; }
+html[data-theme="dark"] .theme-toggle { background: #202d3d; border-color: #3a4a60; color: #e6edf7; }
+html[data-theme="dark"] .theme-toggle:hover { background: #2a3a4e; border-color: #58708e; }
+
+/* Tablet and laptop widths */
+@media (max-width: 1000px) {
+  .topbar { padding-inline: 4.5%; }
+  .topbar nav { gap: 18px; }
+  .top-actions { gap: 13px; }
+}
+@media (max-width: 820px) {
+  .topbar { gap: 12px; }
+  .topbar nav { display: none; }
+  .top-actions { margin-left: auto; }
+  .theme-toggle { width: 38px; padding: 0; }
+  .theme-label { display: none; }
+  .role-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .role-card,
+  .role-grid .visitor-card,
+  .role-grid .admin-card { grid-column: auto; }
+}
+
+/* Phones */
+@media (max-width: 650px) {
+  .topbar { padding-inline: 4%; gap: 6px; }
+  .top-actions { gap: 8px; }
+  .theme-toggle { width: 36px; min-height: 36px; }
+  .calendar-panel { overflow-x: auto; }
+  .calendar-grid { min-width: 560px; }
+  .calendar-toolbar { position: sticky; left: 0; }
+  .trust-strip { height: auto; min-height: 64px; flex-wrap: wrap; row-gap: 8px; padding-block: 12px; }
+  .contact-layout { gap: 16px; }
+  .about-grid,
+  .notice-grid { grid-template-columns: 1fr; }
+  .dash-content { min-width: 0; }
+  .table-panel { min-width: 0; }
+  .table-scroll { max-width: 100%; }
+}
+@media (max-width: 420px) {
+  .top-actions .button-small { min-height: 36px; padding: 8px 10px; gap: 6px; font-size: 10px; }
+  .hero { padding-inline: 6%; }
+  .hero h1 { font-size: clamp(42px, 14vw, 55px); letter-spacing: -3px; }
+  .hero-art { width: 100%; min-width: 0; }
+  .art-card { width: min(340px, calc(100vw - 42px)); }
+  .art-orbit.orbit-one { width: min(355px, calc(100vw - 28px)); height: min(355px, calc(100vw - 28px)); }
+  .art-orbit.orbit-two { width: min(300px, calc(100vw - 72px)); height: min(300px, calc(100vw - 72px)); }
+  .floating-note { right: 2px; max-width: calc(100% - 4px); padding: 10px; }
+  .role-grid { grid-template-columns: 1fr; }
+  .role-card,
+  .role-grid .visitor-card,
+  .role-grid .admin-card { grid-column: auto; }
+  .closing { align-items: flex-start; }
+}
+@media (max-width: 360px) {
+  .topbar { padding-inline: 3%; }
+  .brand { gap: 5px; font-size: 14px; white-space: nowrap; }
+  .theme-toggle { width: 32px; min-height: 32px; }
+  .top-actions { gap: 6px; }
+  .nav-login { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}

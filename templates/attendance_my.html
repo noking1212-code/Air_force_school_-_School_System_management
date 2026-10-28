@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Attendance — Airforce School{% endblock %}
+{% block content %}
+<section class="dash-shell">
+  {% include '_sidebar.html' %}
+  <div class="dash-content"><div class="dash-heading"><div><span class="eyebrow">DAILY ATTENDANCE</span><h1>{{ 'Family attendance' if is_parent else 'My attendance' }} <span>✳</span></h1><p>{{ 'Attendance for students linked to your parent account.' if is_parent else 'Your recorded daily attendance.' }}</p></div></div>
+    <section class="table-panel"><div class="panel-heading"><div><h2>Recent attendance</h2><p>Latest daily records</p></div></div><div class="table-scroll"><table><thead><tr>{% if is_parent %}<th>Student</th>{% endif %}<th>Date</th><th>Status</th></tr></thead><tbody>{% for row in attendance %}<tr>{% if is_parent %}<td><strong>{{ row.full_name }}</strong></td>{% endif %}<td>{{ row.attendance_date.strftime('%A, %b %d, %Y') }}</td><td><span class="attendance-pill {{ row.status }}">{{ row.status|title }}</span></td></tr>{% else %}<tr><td colspan="{{ 3 if is_parent else 2 }}">No attendance records are available yet.</td></tr>{% endfor %}</tbody></table></div></section>
+  </div>
+</section>
+{% endblock %}

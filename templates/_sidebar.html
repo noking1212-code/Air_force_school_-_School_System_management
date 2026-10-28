@@ -1,0 +1,30 @@
+<aside class="sidebar">
+  <a class="side-link {% if nav == 'overview' %}active{% endif %}" href="{{ url_for('dashboard') }}"><span>▦</span> Overview</a>
+  {% if session.get('role') != 'visitor' %}
+  <a class="side-link {% if nav == 'calendar' %}active{% endif %}" href="{{ url_for('school_calendar') }}"><span>▦</span> Calendar</a>
+  {% if session.get('role') == 'administrator' %}
+  <a class="side-link {% if nav == 'student_attendance' %}active{% endif %}" href="{{ url_for('student_attendance') }}"><span>✓</span> Student attendance</a>
+  <a class="side-link {% if nav == 'teacher_attendance' %}active{% endif %}" href="{{ url_for('teacher_attendance') }}"><span>✓</span> Teacher attendance</a>
+  {% elif session.get('role') == 'teacher' %}
+  <a class="side-link {% if nav == 'student_attendance' %}active{% endif %}" href="{{ url_for('student_attendance') }}"><span>✓</span> Student attendance</a>
+  {% else %}
+  <a class="side-link {% if nav == 'my_attendance' %}active{% endif %}" href="{{ url_for('my_attendance') }}"><span>✓</span> Attendance</a>
+  {% endif %}
+  {% endif %}
+  <a class="side-link {% if nav == 'notices' %}active{% endif %}" href="{{ url_for('public_notices') }}"><span>✦</span> Notices</a>
+  {% if session.get('role') in ['student', 'parent'] %}
+  <a class="side-link {% if nav == 'my_results' %}active{% endif %}" href="{{ url_for('my_results') }}"><span>✎</span> My results</a>
+  {% endif %}
+  {% if session.get('role') == 'administrator' %}
+  <a class="side-link {% if nav == 'people' %}active{% endif %}" href="{{ url_for('people') }}"><span>♧</span> People</a>
+  <a class="side-link {% if nav == 'results' %}active{% endif %}" href="{{ url_for('results') }}"><span>✎</span> Results</a>
+  <a class="side-link {% if nav == 'notices_manage' %}active{% endif %}" href="{{ url_for('manage_notices') }}"><span>✦</span> Publish notices</a>
+  <a class="side-link {% if nav == 'inbox' %}active{% endif %}" href="{{ url_for('contact_inbox') }}"><span>✉</span> Contact inbox</a>
+  {% elif session.get('role') == 'teacher' %}
+  <a class="side-link {% if nav == 'results' %}active{% endif %}" href="{{ url_for('results') }}"><span>✎</span> Results</a>
+  {% endif %}
+  <div class="side-bottom">
+    <div class="profile-chip"><span class="profile-avatar">{{ session.name[:1] }}</span><span><strong>{{ session.name }}</strong><small>{{ session.role|title }}</small></span></div>
+    <a class="side-link" href="{{ url_for('logout') }}"><span>↗</span> Sign out</a>
+  </div>
+</aside>

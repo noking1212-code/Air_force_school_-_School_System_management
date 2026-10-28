@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% block title %}Notices — Airforce School{% endblock %}{% block content %}
+{% if session.get('user_id') %}
+<section class="dash-shell">
+  {% include '_sidebar.html' %}
+  <div class="dash-content">
+    <div class="dash-heading"><div><span class="eyebrow">NOTICE BOARD</span><h1>Notices <span>✳</span></h1><p>{% if include_school %}Public circulars and notices for school accounts.{% else %}Public notices only. Private school records stay in other portals.{% endif %}</p></div></div>
+    {% if notices %}
+    <div class="notice-stack">{% for item in notices %}
+      <article class="table-panel notice-panel"><div class="panel-heading"><div><h2>{{ item.title }}</h2><p>{{ item.created_at.strftime('%A, %b %d, %Y') }} · {{ item.full_name }} · {{ 'School' if item.visibility == 'school' else 'Public' }}</p></div></div><div class="notice-body">{{ item.body }}</div></article>
+    {% endfor %}</div>
+    {% else %}
+    <div class="empty-state">No notices are posted yet.</div>
+    {% endif %}
+  </div>
+</section>
+{% else %}
+<section class="page-hero"><div class="eyebrow"><span class="pulse"></span> NOTICE BOARD</div><h1>School notices</h1><p>Circulars the office has shared with visitors and families.</p></section>
+<section class="page-section">
+  {% if notices %}
+  <div class="notice-stack">{% for item in notices %}
+    <article class="table-panel notice-panel"><div class="panel-heading"><div><h2>{{ item.title }}</h2><p>{{ item.created_at.strftime('%A, %b %d, %Y') }} · {{ item.full_name }}</p></div></div><div class="notice-body">{{ item.body }}</div></article>
+  {% endfor %}</div>
+  {% else %}
+  <div class="empty-state">Public notices will appear here when the office publishes them.</div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
