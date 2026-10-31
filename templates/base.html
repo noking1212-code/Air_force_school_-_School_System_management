@@ -15,6 +15,7 @@
     }
   </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='features.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
   <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
 </head>
@@ -25,6 +26,7 @@
     <a href="{{ url_for('home') }}">Home</a>
     <a href="{{ url_for('about') }}">About</a>
     <a href="{{ url_for('public_notices') }}">Notices</a>
+    <a href="{{ url_for('fee_guide') }}">Fees</a>
     <a href="{{ url_for('contact') }}">Contact</a>
     {% if session.get('user_id') and session.get('role') in ['administrator','teacher','student','parent'] %}
     <a href="{{ url_for('school_calendar') }}">Calendar</a>

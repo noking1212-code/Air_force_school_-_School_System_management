@@ -4,6 +4,7 @@
   {% include '_sidebar.html' %}
   <div class="dash-content">
     <div class="dash-heading"><div><span class="eyebrow">NOTICE BOARD</span><h1>Notices <span>✳</span></h1><p>{% if include_school %}Public circulars and notices for school accounts.{% else %}Public notices only. Private school records stay in other portals.{% endif %}</p></div></div>
+    <form method="get" class="filter-form"><label>Search notices<input name="q" value="{{ query }}" placeholder="Title or words in a notice"></label>{% if include_school %}<label>Audience<select name="audience"><option value="">Public and school</option><option value="public" {% if audience == 'public' %}selected{% endif %}>Public</option><option value="school" {% if audience == 'school' %}selected{% endif %}>School accounts</option></select></label>{% endif %}<button class="button button-small" type="submit">Search</button><a class="text-button" href="{{ url_for('public_notices') }}">Clear</a></form>
     {% if notices %}
     <div class="notice-stack">{% for item in notices %}
       <article class="table-panel notice-panel"><div class="panel-heading"><div><h2>{{ item.title }}</h2><p>{{ item.created_at.strftime('%A, %b %d, %Y') }} · {{ item.full_name }} · {{ 'School' if item.visibility == 'school' else 'Public' }}</p></div></div><div class="notice-body">{{ item.body }}</div></article>
@@ -16,6 +17,7 @@
 {% else %}
 <section class="page-hero"><div class="eyebrow"><span class="pulse"></span> NOTICE BOARD</div><h1>School notices</h1><p>Circulars the office has shared with visitors and families.</p></section>
 <section class="page-section">
+  <form method="get" class="filter-form"><label>Search notices<input name="q" value="{{ query }}" placeholder="Title or words in a notice"></label><button class="button button-small" type="submit">Search</button><a class="text-button" href="{{ url_for('public_notices') }}">Clear</a></form>
   {% if notices %}
   <div class="notice-stack">{% for item in notices %}
     <article class="table-panel notice-panel"><div class="panel-heading"><div><h2>{{ item.title }}</h2><p>{{ item.created_at.strftime('%A, %b %d, %Y') }} · {{ item.full_name }}</p></div></div><div class="notice-body">{{ item.body }}</div></article>

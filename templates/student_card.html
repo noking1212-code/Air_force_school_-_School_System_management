@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Student ID card — Airforce School{% endblock %}
+{% block content %}
+<section class="dash-shell card-page">
+  {% include '_sidebar.html' %}
+  <div class="dash-content">
+    <div class="dash-heading no-print"><div><span class="eyebrow">SCHOOL IDENTITY</span><h1>Student ID card <span>✳</span></h1><p>Print this card or choose Save as PDF in your print settings.</p></div><button class="button" type="button" onclick="window.print()">Print / Save PDF <span>↗</span></button></div>
+    <article class="student-id-card">
+      <div class="id-card-top"><span class="brand-mark">A</span><div><strong>Airforce School</strong><small>Student identity card · Demo campus</small></div><span class="id-card-flight">✈</span></div>
+      <div class="id-card-main">
+        <div class="id-photo">{% if student.photo_file %}<img src="{{ url_for('student_photo', student_id=student.id) }}" alt="Photo of {{ student.full_name }}">{% else %}<span>{{ student.full_name[:1]|upper }}</span>{% endif %}</div>
+        <div class="id-details"><span class="eyebrow">STUDENT</span><h2>{{ student.full_name }}</h2><p class="id-number">AFS-{{ '%05d'|format(student.id) }}</p><div class="id-detail-grid"><span>Class<strong>{{ student.class_name or 'Not set' }}{% if student.section %} · {{ student.section }}{% endif %}</strong></span><span>House<strong>{{ student.house or 'Not set' }}</strong></span><span>Guardian<strong>{{ student.guardian_name or 'Not set' }}</strong></span><span>Guardian phone<strong>{{ student.guardian_phone or 'Not set' }}</strong></span></div></div>
+      </div>
+      <div class="id-card-bottom"><span>Issued for school identification</span><span>AFS · {{ today.year }}</span></div>
+    </article>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,8 @@
+.env
+instance/exam_uploads/
+instance/student_photos/
+__pycache__/
+.feature-test-deps/
+backups/
+*.py[cod]
+desktop.ini
