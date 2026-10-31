@@ -28,7 +28,7 @@ if errorlevel 1 goto identity_missing
 git config user.email >nul 2>&1
 if errorlevel 1 goto identity_missing
 
-git add -A -- . ":(exclude,glob).env" ":(exclude,glob)**/.env" ":(exclude,glob)__pycache__/**" ":(exclude,glob)**/__pycache__/**" ":(exclude,glob)instance/exam_uploads/**" ":(exclude,glob)**/desktop.ini" ":(exclude,glob)desktop.ini"
+git add -A -- .
 if errorlevel 1 goto stage_failed
 
 git diff --cached --quiet
