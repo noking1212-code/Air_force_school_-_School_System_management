@@ -854,9 +854,181 @@ def teacher_attendance():
     )
 
 
+
 @app.route("/attendance/my")
-@role_required("student", "parent")
+@role_required("student", "parent", "teacher", "administrator")
 def my_attendance():
+    start_value = request.args.get("start_date", "").strip()
+    end_value = request.args.get("end_date", "").strip()
+
+    start_date = end_date = None
+
+    try:
+        start_date = date.fromisoformat(start_value) if start_value else None
+        end_date = date.fromisoformat(end_value) if end_value else None
+
+        if start_date and end_date and start_date > end_date:
+            raise ValueError
+
+    except ValueError:
+        start_date = end_date = None
+        flash("Choose a valid attendance date range.", "error")
+
+    connection = get_db()
+    cursor = connection.cursor(dictionary=True)
+
+    conditions = []
+    params = []
+
+    if start_date:
+        conditions.append("a.attendance_date >= %s")
+        params.append(start_date)
+
+    if end_date:
+        conditions.append("a.attendance_date <= %s")
+        params.append(end_date)
+
+    date_sql = (
+        " AND " + " AND ".join(conditions)
+        if conditions else ""
+    )
+
+    role = session["role"]
+
+    # STUDENT: View own attendance
+    if role == "student":
+
+        cursor.execute(
+            "SELECT COUNT(*) AS total, "
+            "COALESCE(SUM(a.status = 'present'), 0) AS present, "
+            "COALESCE(SUM(a.status = 'absent'), 0) AS absent "
+            "FROM student_attendance a "
+            "WHERE a.student_id = %s" + date_sql,
+            [session["user_id"]] + params,
+        )
+
+        summary = cursor.fetchone()
+        total = int(summary["total"] or 0)
+        present = int(summary["present"] or 0)
+        absent = int(summary["absent"] or 0)
+
+        summaries = [{
+            "student_id": session["user_id"],
+            "full_name": session["name"],
+            "total": total,
+            "present": present,
+            "absent": absent,
+            "percentage": round(present / total * 100, 1)
+            if total else 0,
+        }]
+
+        cursor.execute(
+            "SELECT a.attendance_date, a.status, u.full_name "
+            "FROM student_attendance a "
+            "JOIN users u ON u.id = a.student_id "
+            "WHERE a.student_id = %s" + date_sql +
+            " ORDER BY a.attendance_date DESC LIMIT 500",
+            [session["user_id"]] + params,
+        )
+
+        rows = cursor.fetchall()
+
+    # TEACHER: View own past attendance
+    elif role == "teacher":
+
+        cursor.execute(
+            "SELECT COUNT(*) AS total, "
+            "COALESCE(SUM(a.status = 'present'), 0) AS present, "
+            "COALESCE(SUM(a.status = 'absent'), 0) AS absent "
+            "FROM teacher_attendance a "
+            "WHERE a.teacher_id = %s" + date_sql,
+            [session["user_id"]] + params,
+        )
+
+        summary = cursor.fetchone()
+
+        total = int(summary["total"] or 0)
+        present = int(summary["present"] or 0)
+        absent = int(summary["absent"] or 0)
+
+        summaries = [{
+            "teacher_id": session["user_id"],
+            "full_name": session["name"],
+            "total": total,
+            "present": present,
+            "absent": absent,
+            "percentage": round(present / total * 100, 1)
+            if total else 0,
+        }]
+
+        cursor.execute(
+            "SELECT a.attendance_date, a.status, u.full_name "
+            "FROM teacher_attendance a "
+            "JOIN users u ON u.id = a.teacher_id "
+            "WHERE a.teacher_id = %s" + date_sql +
+            " ORDER BY a.attendance_date DESC LIMIT 500",
+            [session["user_id"]] + params,
+        )
+
+        rows = cursor.fetchall()
+
+    # PARENT: View linked children's attendance
+    else:
+
+        cursor.execute(
+            "SELECT u.id AS student_id, u.full_name, "
+            "COUNT(a.id) AS total, "
+            "COALESCE(SUM(a.status = 'present'), 0) AS present, "
+            "COALESCE(SUM(a.status = 'absent'), 0) AS absent "
+            "FROM parent_students ps "
+            "JOIN users u ON u.id = ps.student_id "
+            "LEFT JOIN student_attendance a "
+            "ON a.student_id = u.id" + date_sql +
+            " WHERE ps.parent_id = %s "
+            "GROUP BY u.id, u.full_name "
+            "ORDER BY u.full_name",
+            params + [session["user_id"]],
+        )
+
+        summaries = cursor.fetchall()
+
+        for item in summaries:
+            total = int(item["total"] or 0)
+            item["present"] = int(item["present"] or 0)
+            item["absent"] = int(item["absent"] or 0)
+            item["percentage"] = (
+                round(item["present"] / total * 100, 1)
+                if total else 0
+            )
+
+        cursor.execute(
+            "SELECT a.attendance_date, a.status, u.full_name "
+            "FROM parent_students ps "
+            "JOIN users u ON u.id = ps.student_id "
+            "JOIN student_attendance a "
+            "ON a.student_id = u.id "
+            "WHERE ps.parent_id = %s" + date_sql +
+            " ORDER BY a.attendance_date DESC, u.full_name "
+            "LIMIT 500",
+            [session["user_id"]] + params,
+        )
+
+        rows = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return render_template(
+        "attendance_my.html",
+        attendance=rows,
+        summaries=summaries,
+        start_date=start_value,
+        end_date=end_value,
+        is_parent=role == "parent",
+        is_teacher=role == "teacher",
+        nav="my_attendance",
+    )
+
     start_value = request.args.get("start_date", "").strip()
     end_value = request.args.get("end_date", "").strip()
     start_date = end_date = None
