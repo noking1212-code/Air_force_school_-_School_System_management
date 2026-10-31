@@ -31,14 +31,22 @@ if errorlevel 1 goto identity_missing
 git add -A -- .
 if errorlevel 1 goto stage_failed
 
+for /f "delims=" %%F in ('git ls-files -ci --exclude-standard') do git reset -q HEAD -- "%%F"
+if errorlevel 1 goto stage_failed
+
 git diff --cached --quiet
-if not errorlevel 1 goto nothing_to_publish
+if not errorlevel 1 goto check_pending_commits
 
 git diff --cached --name-only | findstr /x /i /c:".env" >nul
 if not errorlevel 1 goto dotenv_staged
 
 git commit -m "Publish local site update"
 if errorlevel 1 goto commit_failed
+
+:check_pending_commits
+set "COMMITS_TO_PUSH=0"
+for /f "delims=" %%C in ('git rev-list --count origin/main..HEAD') do set "COMMITS_TO_PUSH=%%C"
+if "%COMMITS_TO_PUSH%"=="0" goto nothing_to_publish
 
 git push origin main
 if errorlevel 1 goto push_failed
@@ -98,8 +106,8 @@ echo Git could not create the publish record. Nothing was sent to GitHub.
 goto finish
 
 :push_failed
-echo The local publish record was created, but GitHub did not accept the push.
-echo No remote files were overwritten. Open this folder in VS Code and sync the branch.
+echo GitHub did not accept the push. Your local commit is still saved.
+echo Sign in to GitHub in VS Code or GitHub Desktop, then try again.
 
 :finish
 echo.
