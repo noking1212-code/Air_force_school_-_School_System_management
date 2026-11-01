@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Attendance history — Airforce School{% endblock %}
+{% block content %}
+<section class="dash-shell">
+  {% include '_sidebar.html' %}
+  <div class="dash-content">
+    <div class="dash-heading">
+      <div>
+        <span class="eyebrow">ATTENDANCE MANAGEMENT</span>
+        <h1>Attendance history <span>✳</span></h1>
+        <p>Review saved attendance records for students and teachers across previous dates.</p>
+      </div>
+    </div>
+
+    <section class="table-panel">
+      <div class="panel-heading"><div><h2>Find attendance records</h2><p>Choose a group, an optional person, and a date range.</p></div></div>
+      <form method="get" class="filter-form">
+        <label>Attendance type
+          <select name="kind">
+            <option value="student" {% if kind == 'student' %}selected{% endif %}>Students</option>
+            <option value="teacher" {% if kind == 'teacher' %}selected{% endif %}>Teachers</option>
+          </select>
+        </label>
+        <label>{{ role_label }}
+          <select name="person_id">
+            <option value="">All {{ role_label|lower }}s</option>
+            {% for person in people %}
+            <option value="{{ person.id }}" {% if person_id == person.id %}selected{% endif %}>{{ person.full_name }}{% if not person.active %} (inactive){% endif %}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>From<input type="date" name="start_date" value="{{ start_date }}"></label>
+        <label>To<input type="date" name="end_date" value="{{ end_date }}"></label>
+        <button class="button button-small" type="submit">Apply filters</button>
+        <a class="text-button" href="{{ url_for('attendance_history', kind=kind) }}">Clear</a>
+      </form>
+    </section>
+
+    <section class="table-panel">
+      <div class="panel-heading"><div><h2>{{ role_label }} summary</h2><p>Present percentage is based on days with a saved attendance record.</p></div></div>
+      {% if summaries %}
+      <div class="table-scroll"><table>
+        <thead><tr><th>{{ role_label }}</th>{% if kind == 'student' %}<th>Class / Section</th>{% endif %}<th>Present</th><th>Absent</th><th>Recorded days</th><th>Attendance</th></tr></thead>
+        <tbody>{% for item in summaries %}
+          <tr>
+            <td><strong>{{ item.full_name }}</strong>{% if not item.active %}<small>Inactive account</small>{% endif %}<br><small>{{ item.email }}</small></td>
+            {% if kind == 'student' %}<td>{{ item.class_name or '—' }}{% if item.section %} / {{ item.section }}{% endif %}</td>{% endif %}
+            <td>{{ item.present }}</td><td>{{ item.absent }}</td><td>{{ item.total }}</td><td><strong>{{ item.percentage }}%</strong></td>
+          </tr>
+        {% endfor %}</tbody>
+      </table></div>
+      {% else %}<div class="empty-state">No {{ role_label|lower }} accounts were found.</div>{% endif %}
+    </section>
+
+    <section class="table-panel">
+      <div class="panel-heading"><div><h2>Attendance records</h2><p>{{ total_records }} matching records · showing page {{ page }} of {{ total_pages }}</p></div></div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>{{ role_label }}</th>{% if kind == 'student' %}<th>Class / Section</th>{% endif %}<th>Date</th><th>Status</th><th>Recorded by</th></tr></thead>
+        <tbody>
+          {% for row in records %}
+          <tr>
+            <td><strong>{{ row.full_name }}</strong></td>
+            {% if kind == 'student' %}<td>{{ row.class_name or '—' }}{% if row.section %} / {{ row.section }}{% endif %}</td>{% endif %}
+            <td>{{ row.attendance_date.strftime('%A, %b %d, %Y') }}</td>
+            <td><span class="attendance-pill {{ row.status }}">{{ row.status|title }}</span></td>
+            <td>{{ row.recorded_by_name or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="{{ 5 if kind == 'student' else 4 }}">No attendance records match these filters. The selected date range may not have been seeded in this database yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+      {% if total_pages > 1 %}
+      <div class="panel-actions" style="justify-content:space-between; padding:16px 0;">
+        <span>Page {{ page }} / {{ total_pages }}</span>
+        <div class="panel-actions">
+          {% if page > 1 %}<a class="button button-small" href="{{ url_for('attendance_history', kind=kind, person_id=person_id or '', start_date=start_date, end_date=end_date, page=page-1) }}">Previous</a>{% endif %}
+          {% if page < total_pages %}<a class="button button-small" href="{{ url_for('attendance_history', kind=kind, person_id=person_id or '', start_date=start_date, end_date=end_date, page=page+1) }}">Next</a>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

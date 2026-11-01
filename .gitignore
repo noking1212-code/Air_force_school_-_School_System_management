@@ -1,4 +1,4 @@
-# Environment configuration (keep the example file)
+# Environment configuration (keep the example file tracked)
 .env
 .env.*
 !.env.example

@@ -57,6 +57,20 @@ def login_required(view):
         if "user_id" not in session:
             flash("Sign in to open your dashboard.", "info")
             return redirect(url_for("login"))
+        connection = get_db()
+        try:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("SELECT active FROM users WHERE id = %s", (session["user_id"],))
+                account = cursor.fetchone()
+            finally:
+                cursor.close()
+        finally:
+            connection.close()
+        if not account or not account[0]:
+            session.clear()
+            flash("Your account is inactive. Contact a school administrator.", "error")
+            return redirect(url_for("login"))
         return view(*args, **kwargs)
     return wrapped
 
@@ -540,26 +554,45 @@ def contact_inbox():
 
 
 def save_pdf(upload):
-    """Save a small PDF using a server-generated name; return stored and display names."""
-    if not upload or not upload.filename:
-        return None
-    display_name = secure_filename(upload.filename)[:255]
-    if not display_name or not display_name.lower().endswith(".pdf"):
-        raise ValueError("Attach a PDF file for an exam date.")
-    upload.stream.seek(0, os.SEEK_END)
-    file_size = upload.stream.tell()
-    upload.stream.seek(0)
-    if file_size > 10 * 1024 * 1024:
+    original_name = secure_filename(upload.filename or "")
+    if not original_name or not original_name.lower().endswith(".pdf"):
+        raise ValueError("Choose a PDF file.")
+    contents = upload.stream.read(10 * 1024 * 1024 + 1)
+    if len(contents) > 10 * 1024 * 1024:
         raise ValueError("Exam PDF files must be 10 MB or smaller.")
-    header = upload.stream.read(5)
-    upload.stream.seek(0)
-    if header != b"%PDF-":
-        raise ValueError("The attached file is not a valid PDF.")
-    os.makedirs(app.config["EXAM_UPLOAD_FOLDER"], exist_ok=True)
-    stored_name = uuid.uuid4().hex + ".pdf"
-    upload.save(os.path.join(app.config["EXAM_UPLOAD_FOLDER"], stored_name))
-    return stored_name, display_name
+    if not contents.startswith(b"%PDF-"):
+        raise ValueError("The selected file is not a valid PDF.")
+    stored_name = f"{uuid.uuid4().hex}.pdf"
+    folder = app.config["EXAM_UPLOAD_FOLDER"]
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, stored_name), "xb") as saved_file:
+        saved_file.write(contents)
+    return stored_name, original_name[:255]
 
+
+def save_student_photo(upload):
+    original_name = secure_filename(upload.filename or "")
+    extension = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
+    if extension not in PHOTO_EXTENSIONS:
+        raise ValueError("Choose a JPG, PNG, or WebP student photo.")
+    contents = upload.stream.read(3 * 1024 * 1024 + 1)
+    if len(contents) > 3 * 1024 * 1024:
+        raise ValueError("Student photos must be 3 MB or smaller.")
+    signatures = {
+        "jpg": contents.startswith(b"\xff\xd8\xff"),
+        "jpeg": contents.startswith(b"\xff\xd8\xff"),
+        "png": contents.startswith(b"\x89PNG\r\n\x1a\n"),
+        "webp": len(contents) >= 12 and contents[:4] == b"RIFF" and contents[8:12] == b"WEBP",
+    }
+    if not signatures[extension]:
+        raise ValueError("The photo contents do not match the selected image type.")
+    stored_extension = "jpg" if extension in ("jpg", "jpeg") else extension
+    stored_name = f"{uuid.uuid4().hex}.{stored_extension}"
+    folder = app.config["STUDENT_PHOTO_FOLDER"]
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, stored_name), "xb") as saved_file:
+        saved_file.write(contents)
+    return stored_name
 
 def calendar_event_values(form):
     title = form.get("title", "").strip()
@@ -587,6 +620,7 @@ def school_calendar():
         if session.get("role") != "administrator":
             abort(403)
         stored_file = None
+        connection = cursor = None
         try:
             title, event_type, event_day, description = calendar_event_values(request.form)
             upload = request.files.get("attachment")
@@ -624,6 +658,10 @@ def school_calendar():
                     os.remove(os.path.join(app.config["EXAM_UPLOAD_FOLDER"], stored_file[0]))
                 except OSError:
                     pass
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
             raise
 
     today_value = date.today()
@@ -712,6 +750,16 @@ def edit_calendar_event(event_id):
                 except OSError:
                     pass
             flash(str(error), "error")
+        except mysql.connector.Error:
+            connection.rollback()
+            if new_file:
+                try:
+                    os.remove(os.path.join(app.config["EXAM_UPLOAD_FOLDER"], new_file[0]))
+                except OSError:
+                    pass
+            cursor.close()
+            connection.close()
+            raise
     cursor.close()
     connection.close()
     return render_template("calendar_form.html", event=event, nav="calendar")
@@ -869,6 +917,141 @@ def teacher_attendance():
         title="Teacher attendance", recent=recent, nav="teacher_attendance",
     )
 
+
+
+@app.route("/attendance/history")
+@role_required("administrator")
+def attendance_history():
+    """Browse historical attendance for every student or teacher."""
+    kind = request.args.get("kind", "student").strip().lower()
+    if kind not in ("student", "teacher"):
+        kind = "student"
+
+    table = "student_attendance" if kind == "student" else "teacher_attendance"
+    person_column = "student_id" if kind == "student" else "teacher_id"
+    role_label = "Student" if kind == "student" else "Teacher"
+
+    start_value = request.args.get("start_date", "").strip()
+    end_value = request.args.get("end_date", "").strip()
+    start_date = end_date = None
+    try:
+        start_date = date.fromisoformat(start_value) if start_value else None
+        end_date = date.fromisoformat(end_value) if end_value else None
+        if start_date and end_date and start_date > end_date:
+            raise ValueError
+    except ValueError:
+        start_date = end_date = None
+        start_value = end_value = ""
+        flash("Choose a valid attendance date range.", "error")
+
+    try:
+        person_id = int(request.args.get("person_id", "0") or 0)
+    except (TypeError, ValueError):
+        person_id = 0
+
+    try:
+        page = max(1, int(request.args.get("page", "1") or 1))
+    except (TypeError, ValueError):
+        page = 1
+
+    page_size = 100
+    offset = (page - 1) * page_size
+    connection = get_db()
+    cursor = connection.cursor(dictionary=True)
+
+    # Include inactive accounts so administrators can still inspect their older records.
+    cursor.execute(
+        "SELECT id, full_name, email, class_name, section, active "
+        "FROM users WHERE role = %s ORDER BY active DESC, full_name",
+        (kind,),
+    )
+    people = cursor.fetchall()
+    valid_person_ids = {int(person["id"]) for person in people}
+    if person_id and person_id not in valid_person_ids:
+        person_id = 0
+        flash("The selected account was not found for this attendance type.", "error")
+
+    on_conditions = []
+    on_values = []
+    if start_date:
+        on_conditions.append("a.attendance_date >= %s")
+        on_values.append(start_date)
+    if end_date:
+        on_conditions.append("a.attendance_date <= %s")
+        on_values.append(end_date)
+    join_filter = (" AND " + " AND ".join(on_conditions)) if on_conditions else ""
+
+    summary_sql = (
+        "SELECT u.id AS person_id, u.full_name, u.email, u.class_name, u.section, "
+        "u.active, COUNT(a.id) AS total, "
+        "COALESCE(SUM(a.status = 'present'), 0) AS present, "
+        "COALESCE(SUM(a.status = 'absent'), 0) AS absent "
+        f"FROM users u LEFT JOIN {table} a ON a.{person_column} = u.id{join_filter} "
+        "WHERE u.role = %s"
+    )
+    summary_values = list(on_values) + [kind]
+    if person_id:
+        summary_sql += " AND u.id = %s"
+        summary_values.append(person_id)
+    summary_sql += " GROUP BY u.id, u.full_name, u.email, u.class_name, u.section, u.active ORDER BY u.active DESC, u.full_name"
+    cursor.execute(summary_sql, summary_values)
+    summaries = cursor.fetchall()
+    for item in summaries:
+        item["total"] = int(item["total"] or 0)
+        item["present"] = int(item["present"] or 0)
+        item["absent"] = int(item["absent"] or 0)
+        item["percentage"] = round(item["present"] / item["total"] * 100, 1) if item["total"] else 0
+
+    where_conditions = []
+    where_values = []
+    if start_date:
+        where_conditions.append("a.attendance_date >= %s")
+        where_values.append(start_date)
+    if end_date:
+        where_conditions.append("a.attendance_date <= %s")
+        where_values.append(end_date)
+    if person_id:
+        where_conditions.append(f"a.{person_column} = %s")
+        where_values.append(person_id)
+    where_sql = " WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+
+    cursor.execute(
+        f"SELECT COUNT(*) AS total FROM {table} a{where_sql}",
+        where_values,
+    )
+    total_records = int(cursor.fetchone()["total"] or 0)
+    total_pages = max(1, (total_records + page_size - 1) // page_size)
+    if page > total_pages:
+        page = total_pages
+        offset = (page - 1) * page_size
+
+    cursor.execute(
+        f"SELECT a.id, a.attendance_date, a.status, u.id AS person_id, u.full_name, "
+        "u.class_name, u.section, recorder.full_name AS recorded_by_name "
+        f"FROM {table} a JOIN users u ON u.id = a.{person_column} "
+        "LEFT JOIN users recorder ON recorder.id = a.recorded_by"
+        f"{where_sql} ORDER BY a.attendance_date DESC, u.full_name LIMIT %s OFFSET %s",
+        where_values + [page_size, offset],
+    )
+    records = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template(
+        "attendance_history.html",
+        kind=kind,
+        role_label=role_label,
+        people=people,
+        person_id=person_id,
+        summaries=summaries,
+        records=records,
+        start_date=start_value,
+        end_date=end_value,
+        page=page,
+        total_pages=total_pages,
+        total_records=total_records,
+        nav="attendance_history",
+    )
 
 
 @app.route("/attendance/my")
@@ -1093,27 +1276,7 @@ def student_profiles():
                 if guardian_phone and len(guardian_phone) > 32:
                     raise ValueError("Guardian phone must be 32 characters or fewer.")
                 if upload and upload.filename:
-                    filename = secure_filename(upload.filename)
-                    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-                    if extension not in PHOTO_EXTENSIONS:
-                        raise ValueError("Use a JPG, PNG, or WebP photo.")
-                    upload.stream.seek(0, os.SEEK_END)
-                    size = upload.stream.tell()
-                    upload.stream.seek(0)
-                    signature = upload.stream.read(12)
-                    upload.stream.seek(0)
-                    valid_signature = (
-                        (extension in ("jpg", "jpeg") and signature.startswith(b"\xff\xd8\xff"))
-                        or (extension == "png" and signature.startswith(b"\x89PNG\r\n\x1a\n"))
-                        or (extension == "webp" and signature[:4] == b"RIFF" and signature[8:12] == b"WEBP")
-                    )
-                    if size > 3 * 1024 * 1024:
-                        raise ValueError("Student photos must be 3 MB or smaller.")
-                    if not valid_signature:
-                        raise ValueError("The selected file is not a valid image of that type.")
-                    new_photo = f"{uuid.uuid4().hex}.{extension}"
-                    os.makedirs(app.config["STUDENT_PHOTO_FOLDER"], exist_ok=True)
-                    upload.save(os.path.join(app.config["STUDENT_PHOTO_FOLDER"], new_photo))
+                    new_photo = save_student_photo(upload)
                 photo_file = new_photo or (None if remove_photo else student["photo_file"])
                 cursor.execute(
                     "UPDATE users SET class_name = %s, section = %s, house = %s, guardian_name = %s, "
@@ -1306,7 +1469,13 @@ def batch_results():
     if request.method == "POST":
         try:
             maximum = Decimal(max_score)
-            if not class_name or not subject or not term or maximum <= 0 or maximum > Decimal("9999.99"):
+            if (
+                not class_name or not subject or not term
+                or not maximum.is_finite()
+                or maximum <= 0
+                or maximum > Decimal("9999.99")
+                or maximum != maximum.quantize(Decimal("0.01"))
+            ):
                 raise ValueError
             cursor.execute(
                 "SELECT id FROM users WHERE role = 'student' AND active = TRUE AND class_name = %s "
@@ -1319,7 +1488,13 @@ def batch_results():
                 if key.startswith("score_") and value.strip():
                     student_id = int(key[6:])
                     score = Decimal(value)
-                    if student_id not in valid_ids or score < 0 or score > maximum:
+                    if (
+                        student_id not in valid_ids
+                        or not score.is_finite()
+                        or score < 0
+                        or score > maximum
+                        or score != score.quantize(Decimal("0.01"))
+                    ):
                         raise ValueError
                     scores.append((student_id, score))
             if not scores:
@@ -1382,7 +1557,13 @@ def fee_guide():
             try:
                 amount = Decimal(request.form.get("amount", ""))
                 fee_id = int(request.form.get("fee_id", "0") or "0")
-                if not title or len(title) > 120 or len(description) > 1000 or amount < 0 or amount > Decimal("99999999.99"):
+                if (
+                    not title or len(title) > 120 or len(description) > 1000
+                    or not amount.is_finite()
+                    or amount < 0
+                    or amount > Decimal("99999999.99")
+                    or amount != amount.quantize(Decimal("0.01"))
+                ):
                     raise ValueError
                 if frequency not in ("one-time", "monthly", "per-term", "yearly"):
                     raise ValueError
@@ -1480,7 +1661,18 @@ def timetable():
                 )
                 if cursor.fetchone()["total"]:
                     raise ValueError("That class already has an overlapping timetable period.")
+                if teacher_id:
+                    cursor.execute(
+                        "SELECT COUNT(*) AS total FROM timetable_slots WHERE teacher_id = %s "
+                        "AND weekday = %s AND start_time < %s AND end_time > %s AND id <> %s",
+                        (teacher_id, weekday, end_time, start_time, slot_id),
+                    )
+                    if cursor.fetchone()["total"]:
+                        raise ValueError("That teacher already has an overlapping timetable period.")
                 if slot_id:
+                    cursor.execute("SELECT 1 FROM timetable_slots WHERE id = %s", (slot_id,))
+                    if not cursor.fetchone():
+                        raise ValueError("Timetable entry not found.")
                     cursor.execute(
                         "UPDATE timetable_slots SET class_name = %s, section = %s, weekday = %s, "
                         "start_time = %s, end_time = %s, subject_name = %s, teacher_id = %s, room = %s WHERE id = %s",

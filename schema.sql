@@ -1,3 +1,9 @@
+-- GradeSphere corrected full demo database script.
+-- Target: MySQL 8.0+. Run in a fresh SQL editor/session.
+-- This file creates the schema first, then inserts demo data.
+-- Attendance sample/history and daily assessment seed data are included once.
+-- Existing data is not dropped or truncated.
+
 -- GradeSphere complete local demo database for MySQL 8.0.
 -- Run the full script in a fresh connection. Demo records are fictional.
 CREATE DATABASE IF NOT EXISTS gradesphere

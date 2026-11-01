@@ -9,6 +9,7 @@
   {% if session.get('role') == 'administrator' %}
   <a class="side-link {% if nav == 'student_attendance' %}active{% endif %}" href="{{ url_for('student_attendance') }}"><span>✓</span> Student attendance</a>
   <a class="side-link {% if nav == 'teacher_attendance' %}active{% endif %}" href="{{ url_for('teacher_attendance') }}"><span>✓</span> Teacher attendance</a>
+  <a class="side-link {% if nav == 'attendance_history' %}active{% endif %}" href="{{ url_for('attendance_history') }}"><span>◷</span> Attendance history</a>
   {% elif session.get('role') == 'teacher' %}
   <a class="side-link {% if nav == 'student_attendance' %}active{% endif %}" href="{{ url_for('student_attendance') }}"><span>✓</span> Student attendance</a>
   <a class="side-link {% if nav == 'my_attendance' %}active{% endif %}" href="{{ url_for('my_attendance') }}"><span>✓</span> My attendance</a>
