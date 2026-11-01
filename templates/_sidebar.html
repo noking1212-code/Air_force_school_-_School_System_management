@@ -12,6 +12,8 @@
   {% elif session.get('role') == 'teacher' %}
   <a class="side-link {% if nav == 'student_attendance' %}active{% endif %}" href="{{ url_for('student_attendance') }}"><span>✓</span> Student attendance</a>
   <a class="side-link {% if nav == 'my_attendance' %}active{% endif %}" href="{{ url_for('my_attendance') }}"><span>✓</span> My attendance</a>
+  {% if session.get('role') in ['student', 'parent', 'teacher'] %}<a href="{{ url_for('my_attendance') }}">My Attendance</a>
+  {% endif %}
   {% else %}
   <a class="side-link {% if nav == 'my_attendance' %}active{% endif %}" href="{{ url_for('my_attendance') }}"><span>✓</span> Attendance</a>
   {% endif %}
