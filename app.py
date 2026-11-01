@@ -871,6 +871,141 @@ def teacher_attendance():
 
 
 
+@app.route("/attendance/history")
+@role_required("administrator")
+def attendance_history():
+    """Browse historical attendance for every student or teacher."""
+    kind = request.args.get("kind", "student").strip().lower()
+    if kind not in ("student", "teacher"):
+        kind = "student"
+
+    table = "student_attendance" if kind == "student" else "teacher_attendance"
+    person_column = "student_id" if kind == "student" else "teacher_id"
+    role_label = "Student" if kind == "student" else "Teacher"
+
+    start_value = request.args.get("start_date", "").strip()
+    end_value = request.args.get("end_date", "").strip()
+    start_date = end_date = None
+    try:
+        start_date = date.fromisoformat(start_value) if start_value else None
+        end_date = date.fromisoformat(end_value) if end_value else None
+        if start_date and end_date and start_date > end_date:
+            raise ValueError
+    except ValueError:
+        start_date = end_date = None
+        start_value = end_value = ""
+        flash("Choose a valid attendance date range.", "error")
+
+    try:
+        person_id = int(request.args.get("person_id", "0") or 0)
+    except (TypeError, ValueError):
+        person_id = 0
+
+    try:
+        page = max(1, int(request.args.get("page", "1") or 1))
+    except (TypeError, ValueError):
+        page = 1
+
+    page_size = 100
+    offset = (page - 1) * page_size
+    connection = get_db()
+    cursor = connection.cursor(dictionary=True)
+
+    # Include inactive accounts so administrators can still inspect their older records.
+    cursor.execute(
+        "SELECT id, full_name, email, class_name, section, active "
+        "FROM users WHERE role = %s ORDER BY active DESC, full_name",
+        (kind,),
+    )
+    people = cursor.fetchall()
+    valid_person_ids = {int(person["id"]) for person in people}
+    if person_id and person_id not in valid_person_ids:
+        person_id = 0
+        flash("The selected account was not found for this attendance type.", "error")
+
+    on_conditions = []
+    on_values = []
+    if start_date:
+        on_conditions.append("a.attendance_date >= %s")
+        on_values.append(start_date)
+    if end_date:
+        on_conditions.append("a.attendance_date <= %s")
+        on_values.append(end_date)
+    join_filter = (" AND " + " AND ".join(on_conditions)) if on_conditions else ""
+
+    summary_sql = (
+        "SELECT u.id AS person_id, u.full_name, u.email, u.class_name, u.section, "
+        "u.active, COUNT(a.id) AS total, "
+        "COALESCE(SUM(a.status = 'present'), 0) AS present, "
+        "COALESCE(SUM(a.status = 'absent'), 0) AS absent "
+        f"FROM users u LEFT JOIN {table} a ON a.{person_column} = u.id{join_filter} "
+        "WHERE u.role = %s"
+    )
+    summary_values = list(on_values) + [kind]
+    if person_id:
+        summary_sql += " AND u.id = %s"
+        summary_values.append(person_id)
+    summary_sql += " GROUP BY u.id, u.full_name, u.email, u.class_name, u.section, u.active ORDER BY u.active DESC, u.full_name"
+    cursor.execute(summary_sql, summary_values)
+    summaries = cursor.fetchall()
+    for item in summaries:
+        item["total"] = int(item["total"] or 0)
+        item["present"] = int(item["present"] or 0)
+        item["absent"] = int(item["absent"] or 0)
+        item["percentage"] = round(item["present"] / item["total"] * 100, 1) if item["total"] else 0
+
+    where_conditions = []
+    where_values = []
+    if start_date:
+        where_conditions.append("a.attendance_date >= %s")
+        where_values.append(start_date)
+    if end_date:
+        where_conditions.append("a.attendance_date <= %s")
+        where_values.append(end_date)
+    if person_id:
+        where_conditions.append(f"a.{person_column} = %s")
+        where_values.append(person_id)
+    where_sql = " WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+
+    cursor.execute(
+        f"SELECT COUNT(*) AS total FROM {table} a{where_sql}",
+        where_values,
+    )
+    total_records = int(cursor.fetchone()["total"] or 0)
+    total_pages = max(1, (total_records + page_size - 1) // page_size)
+    if page > total_pages:
+        page = total_pages
+        offset = (page - 1) * page_size
+
+    cursor.execute(
+        f"SELECT a.id, a.attendance_date, a.status, u.id AS person_id, u.full_name, "
+        "u.class_name, u.section, recorder.full_name AS recorded_by_name "
+        f"FROM {table} a JOIN users u ON u.id = a.{person_column} "
+        "LEFT JOIN users recorder ON recorder.id = a.recorded_by"
+        f"{where_sql} ORDER BY a.attendance_date DESC, u.full_name LIMIT %s OFFSET %s",
+        where_values + [page_size, offset],
+    )
+    records = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template(
+        "attendance_history.html",
+        kind=kind,
+        role_label=role_label,
+        people=people,
+        person_id=person_id,
+        summaries=summaries,
+        records=records,
+        start_date=start_value,
+        end_date=end_value,
+        page=page,
+        total_pages=total_pages,
+        total_records=total_records,
+        nav="attendance_history",
+    )
+
+
 @app.route("/attendance/my")
 @role_required("student", "parent", "teacher")
 def my_attendance():
