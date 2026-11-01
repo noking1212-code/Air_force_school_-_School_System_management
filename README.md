@@ -10,7 +10,6 @@
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![TiDB](https://img.shields.io/badge/TiDB-Cloud%20Option-00A3E0?style=for-the-badge&logo=tidb&logoColor=white)
-![HTML CSS JS](https://img.shields.io/badge/HTML-CSS-JavaScript-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 
 [✨ Features](#-features) · [🧭 About](#-about-gradesphere) · [⚙️ Setup](#-getting-started) · [🗄️ Database](#-database-configuration) · [🧪 Demo accounts](#-demo-accounts)
 
@@ -108,21 +107,14 @@ GradeSphere/
 ├── app.py                  # Main Flask application
 ├── requirements.txt        # Python dependencies
 ├── .env.example            # Sample configuration; copy this to .env
-├── .env                    # Your local database settings (not included in Git)
 ├── .gitignore              # Files and folders ignored by Git
 ├── README.md               # Project guide
 ├── schema.sql              # Initial database schema and demo records
-│
 ├── templates/              # HTML/Jinja pages
-├── static/                 # CSS and JavaScript assets
-│
-├── seed_demo.py            # Optional demo-data helper
-├── create_admin.py         # Optional administrator-account helper
-├── Publish Live.bat        # Optional Windows publishing helper
-└── instance/               # Uploaded student photos and exam documents
-```
+└── static/                 # CSS and JavaScript assets
 
-The `instance/` upload folders are created when uploads are first saved. Keep the uploaded files if you need them; they are stored on the computer running GradeSphere, not in the SQL database.
+
+```
 
 ---
 
@@ -187,7 +179,7 @@ Example `.env` settings:
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=your_local_mysql_password
+DB_PASSWORD= your_local_mysql_password
 DB_NAME=gradesphere
 
 GRADESPHERE_SECRET=replace_with_a_long_random_value
@@ -199,14 +191,14 @@ FLASK_DEBUG=true
 Replace the database values with the credentials displayed in your TiDB Cloud connection settings:
 
 ```env
-DB_HOST=your_tidb_cluster_host
+DB_HOST=gateway01.ap-southeast-1.prod.aws.tidbcloud.com
 DB_PORT=4000
-DB_USER=your_tidb_username
-DB_PASSWORD=your_tidb_password
+DB_USER=3cWJrEGuhsB1wGn.root
+DB_PASSWORD=RfziV4BcFbPqbYsc
 DB_NAME=gradesphere
+FLASK_DEBUG=false
 
 GRADESPHERE_SECRET=replace_with_a_long_random_value
-FLASK_DEBUG=true
 ```
 
 Use the host and port shown by your TiDB cluster. `4000` is an example port; follow the connection details provided by your cluster.
@@ -321,7 +313,6 @@ The script asks for a name, email and password, then creates an administrator in
 - `requirements.txt` lists the external Python packages.
 - `templates/` contains the Jinja/HTML pages.
 - `static/` contains the frontend CSS and JavaScript.
-- `seed_demo.py` and `create_admin.py` are optional utilities.
 - The project stores uploaded photos and exam documents in the local `instance/` directory by default.
 - Database backups should be kept separately from the main source-code folder.
 
@@ -333,6 +324,8 @@ The script asks for a name, email and password, then creates an administrator in
 
 **GradeSphere — School Management Portal**
 
-<sub>Created as a student Computer Science project using Python, Flask and MySQL.</sub>
+<sub>Created by <b>Prabhsamrath Singh</b> & <b>Abhinav Pathak</b><br>
+as a student Computer Science project<br>
+using Python and MySQL.</sub>
 
 </div>
