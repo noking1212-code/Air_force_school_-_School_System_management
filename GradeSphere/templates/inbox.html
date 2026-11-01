@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block title %}Contact inbox — Airforce School{% endblock %}{% block content %}
+<section class="dash-shell">
+{% include '_sidebar.html' %}
+<div class="dash-content"><div class="dash-heading"><div><span class="eyebrow">SCHOOL OFFICE</span><h1>Contact inbox <span>✳</span></h1><p>Messages sent from the public contact form.</p></div></div>
+<section class="table-panel"><div class="panel-heading"><div><h2>Messages</h2><p>{{ messages|length }} received</p></div></div>
+<div class="table-scroll"><table><thead><tr><th>From</th><th>Email</th><th>Received</th><th>Message</th></tr></thead><tbody>{% for row in messages %}<tr><td><strong>{{ row.full_name }}</strong></td><td>{{ row.email }}</td><td>{{ row.created_at.strftime('%b %d, %Y %H:%M') }}</td><td class="message-cell">{{ row.message }}</td></tr>{% else %}<tr><td colspan="4">No contact messages yet.</td></tr>{% endfor %}</tbody></table></div></section>
+</div></section>{% endblock %}
