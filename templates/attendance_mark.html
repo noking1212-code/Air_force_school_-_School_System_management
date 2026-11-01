@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — Airforce School{% endblock %}
+{% block content %}
+<section class="dash-shell">
+  {% include '_sidebar.html' %}
+  <div class="dash-content"><div class="dash-heading"><div><span class="eyebrow">DAILY ATTENDANCE</span><h1>{{ title }} <span>✳</span></h1><p>Choose a date and mark each person Present or Absent.</p></div></div>
+    <form method="get" class="date-filter"><label for="attendance-date">Attendance date</label><input id="attendance-date" type="date" name="date" value="{{ record_date.isoformat() }}"><button class="button button-small" type="submit">View date</button></form>
+    <section class="table-panel attendance-panel"><div class="panel-heading"><div><h2>{{ title }} for {{ record_date.strftime('%A, %B %d, %Y') }}</h2><p>Saving again for this date updates the existing daily record.</p></div></div>
+      {% if people %}<form method="post" action="{{ request.path }}?date={{ record_date.isoformat() }}"><div class="attendance-list">{% for person in people %}<div class="attendance-row"><span class="person-avatar">{{ person.full_name[:1] }}</span><div class="person-info"><strong>{{ person.full_name }}</strong><small>{{ person.email }}</small></div><label class="status-select"><span>Status</span><select name="{{ attendance_kind }}_{{ person.id }}"><option value="" {% if not statuses.get(person.id) %}selected{% endif %}>Not marked</option><option value="present" {% if statuses.get(person.id) == 'present' %}selected{% endif %}>Present</option><option value="absent" {% if statuses.get(person.id) == 'absent' %}selected{% endif %}>Absent</option></select></label></div>{% endfor %}</div><div class="attendance-submit"><span>Unmarked people are left unchanged.</span><button class="button" type="submit">Save attendance <span>↗</span></button></div></form>{% else %}<div class="empty-state">No active {{ attendance_kind }} accounts are available yet.</div>{% endif %}
+    </section>
+    <section class="table-panel"><div class="panel-heading"><div><h2>Recorded for this date</h2><p>{{ recent|length }} attendance entries</p></div></div><div class="table-scroll"><table><thead><tr><th>Name</th><th>Date</th><th>Status</th></tr></thead><tbody>{% for row in recent %}<tr><td><strong>{{ row.full_name }}</strong></td><td>{{ row.attendance_date.strftime('%b %d, %Y') }}</td><td><span class="attendance-pill {{ row.status }}">{{ row.status|title }}</span></td></tr>{% else %}<tr><td colspan="3">No attendance has been recorded for this date.</td></tr>{% endfor %}</tbody></table></div></section>
+  </div>
+</section>
+{% endblock %}

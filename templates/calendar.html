@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}School calendar — Airforce School{% endblock %}
+{% block content %}
+<section class="dash-shell">
+  {% include '_sidebar.html' %}
+  <div class="dash-content">
+    <div class="dash-heading calendar-heading"><div><span class="eyebrow">SCHOOL LIFE, IN SYNC</span><h1>School calendar <span>✳</span></h1><p>Holidays, school events, and upcoming exams.</p></div>
+      {% if is_admin %}<a class="button" href="#add-event">Add calendar entry <span>＋</span></a>{% endif %}
+    </div>
+    {% if is_admin %}<section class="table-panel calendar-add" id="add-event"><div class="panel-heading"><div><h2>Add to the calendar</h2><p>Exam dates can include an optional PDF attachment.</p></div></div>
+      <form method="post" enctype="multipart/form-data" class="inline-form calendar-form">
+        <label>Title<input name="title" maxlength="120" required placeholder="e.g. Winter break begins"></label>
+        <label>Type<select name="event_type" required><option value="holiday">Holiday</option><option value="event">School event</option><option value="exam">Exam date</option></select></label>
+        <label>Date<input type="date" name="event_date" required></label>
+        <label class="wide-field">Description <span class="optional-label">Optional</span><textarea name="description" rows="2" maxlength="4000" placeholder="Add helpful details for the school community"></textarea></label>
+        <label class="wide-field">Exam PDF <span class="optional-label">Optional · PDF up to 10 MB</span><input type="file" name="attachment" accept="application/pdf,.pdf"></label>
+        <button class="button" type="submit">Add entry <span>↗</span></button>
+      </form>
+    </section>{% endif %}
+    <section class="calendar-panel">
+      <div class="calendar-toolbar"><a class="calendar-arrow" href="{{ url_for('school_calendar', year=prev_year, month=prev_month) }}" aria-label="Previous month">←</a><h2>{{ month_name }} <span>{{ year }}</span></h2><a class="calendar-arrow" href="{{ url_for('school_calendar', year=next_year, month=next_month) }}" aria-label="Next month">→</a></div>
+      <div class="calendar-grid calendar-weekdays">{% for label in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<div>{{ label }}</div>{% endfor %}</div>
+      <div class="calendar-weeks">{% for week in weeks %}<div class="calendar-grid calendar-week">{% for day in week %}<div class="calendar-day {% if not day.in_month %}outside-month{% endif %} {% if day.date == today %}today{% endif %}"><span class="day-number">{{ day.date.day }}</span>{% for event in day.events %}<div class="calendar-event {{ event.event_type }}"><span class="event-kind">{{ event.event_type|title }}</span><strong>{{ event.title }}</strong>{% if event.description %}<span class="event-description">{{ event.description }}</span>{% endif %}{% if event.attachment_name %}<a class="event-file" href="{{ url_for('exam_attachment', event_id=event.id) }}">PDF · {{ event.attachment_name }}</a>{% endif %}{% if is_admin %}<div class="event-actions"><a href="{{ url_for('edit_calendar_event', event_id=event.id) }}">Edit</a><form method="post" action="{{ url_for('delete_calendar_event', event_id=event.id) }}" onsubmit="return confirm('Remove this calendar entry?')"><button type="submit">Remove</button></form></div>{% endif %}</div>{% endfor %}</div>{% endfor %}</div>{% endfor %}</div>
+    </section>
+    <div class="calendar-legend"><span><i class="legend-dot holiday-dot"></i>Holiday</span><span><i class="legend-dot event-dot"></i>School event</span><span><i class="legend-dot exam-dot"></i>Exam</span></div>
+  </div>
+</section>
+{% endblock %}

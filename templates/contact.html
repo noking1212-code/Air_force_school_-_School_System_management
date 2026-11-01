@@ -1,0 +1,21 @@
+{% extends 'base.html' %}{% block title %}Contact — Airforce School{% endblock %}{% block content %}
+<section class="page-hero"><div class="eyebrow"><span class="pulse"></span> SCHOOL OFFICE</div><h1>Write to us</h1><p>Visitors, parents, and guests may leave a message. The principal reads these in the contact inbox.</p></section>
+<section class="page-section contact-layout">
+  <div class="login-panel contact-panel">
+    <span class="eyebrow">SEND A MESSAGE</span>
+    <h2>Contact the office</h2>
+    <form method="post">
+      <label>Full name<input name="full_name" maxlength="120" required></label>
+      <label>Email address<input type="email" name="email" required></label>
+      <label>Message<textarea name="message" rows="5" maxlength="4000" required></textarea></label>
+      <button class="button login-submit" type="submit">Send message <span>↗</span></button>
+    </form>
+  </div>
+  <aside class="about-card">
+    <span class="role-no">CAMPUS</span>
+    <h2>Airforce School</h2>
+    <p>Station Road, Demo Campus<br>Office hours: 8:00 AM – 2:30 PM</p>
+    <p>This contact form stores messages in the school database for the administrator. It is part of a Class 12 project.</p>
+  </aside>
+</section>
+{% endblock %}
