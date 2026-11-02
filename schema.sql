@@ -883,7 +883,17 @@ SELECT
 
 -- Optional verification: all GradeSphere tables should now report
 -- utf8mb4_unicode_ci for their table collation.
-SELECT TABLE_NAME,TABLE_COLLATION
-FROM information_schema.TABLES
-WHERE TABLE_SCHEMA='gradesphere'
-ORDER BY TABLE_NAME;
+
+USE gradesphere;
+
+SHOW TABLES;
+
+SELECT role, COUNT(*) AS total
+FROM users
+GROUP BY role;
+
+SELECT COUNT(*) AS total_books
+FROM library_books;
+
+SELECT COUNT(*) AS total_invoices
+FROM fee_invoices;
