@@ -46,7 +46,8 @@ The project includes five account roles:
       <ul>
         <li>Student profiles and digital ID cards</li>
         <li>Profile photo uploads</li>
-        <li>Student attendance records</li>
+        <li>Student attendance records and personal history</li>
+        <li>Date-range attendance summaries</li>
         <li>Individual result views</li>
       </ul>
     </td>
@@ -56,7 +57,8 @@ The project includes five account roles:
         <li>Individual and batch result entry</li>
         <li>PDF report-card generation</li>
         <li>Homework and timetable pages</li>
-        <li>Teacher attendance records</li>
+        <li>Teacher attendance records and personal history</li>
+        <li>Administrator attendance history for students and teachers</li>
       </ul>
     </td>
   </tr>
@@ -179,11 +181,11 @@ Example `.env` settings:
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD= your_local_mysql_password
+DB_PASSWORD=your_local_mysql_password
 DB_NAME=gradesphere
 
 GRADESPHERE_SECRET=replace_with_a_long_random_value
-FLASK_DEBUG=true
+FLASK_DEBUG=false
 ```
 
 ### ☁️ Option B — TiDB Cloud
@@ -191,10 +193,10 @@ FLASK_DEBUG=true
 Replace the database values with the credentials displayed in your TiDB Cloud connection settings:
 
 ```env
-DB_HOST=gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+DB_HOST=your_tidb_host
 DB_PORT=4000
-DB_USER=3cWJrEGuhsB1wGn.root
-DB_PASSWORD=RfziV4BcFbPqbYsc
+DB_USER=your_tidb_user
+DB_PASSWORD=your_tidb_password
 DB_NAME=gradesphere
 FLASK_DEBUG=false
 
@@ -230,7 +232,7 @@ The supplied `schema.sql` creates the `gradesphere` database, creates the tables
 3. Execute the script.
 4. Confirm that the `gradesphere` database and its tables are available.
 
-> ⚠️ Run `schema.sql` for a fresh project database. Do not use it as an update/migration script on a database containing records you need to preserve. The removed migration files are not required by this version of the project.
+> ⚠️ Run `schema.sql` for a fresh project database. Do not use it as an update/migration script on a database containing records you need to preserve.
 
 ---
 
@@ -270,25 +272,7 @@ The parent demo account is linked to the demo student account. These records are
 
 ---
 
-## 🧩 Optional helper scripts
-
-These scripts are utilities. They are **not required** to start the Flask application.
-
-### Add or restore demo records
-
-```powershell
-python seed_demo.py
-```
-
-Use this if you want the helper to ensure the demo accounts and selected sample sections are present in the currently selected database. The supplied `schema.sql` already includes demo records, so this is normally unnecessary after a fresh schema import.
-
-### Create another administrator
-
-```powershell
-python create_admin.py
-```
-
-The script asks for a name, email and password, then creates an administrator in the database selected by `.env`. It is optional because the supplied schema already contains a demonstration administrator account.
+The supplied `schema.sql` includes demo accounts and sample records. To create additional accounts, sign in as an administrator and use **People**.
 
 ---
 
