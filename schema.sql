@@ -1,5 +1,11 @@
-drop database if EXISTS gradesphere;
+-- IMPORTANT: DESTRUCTIVE DATABASE RESET
+-- This script drops and recreates the entire `gradesphere` database.
+-- Back up any existing data before running it. Use it only for a fresh
+-- installation or when you intentionally want to rebuild the demo database.
+DROP DATABASE IF EXISTS gradesphere;
 -- ================================================================
+-- Compatibility target: MySQL 8.0+ or TiDB 8.5+ (recommended for GA
+-- foreign-key support). This script uses recursive CTEs and window functions.
 
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -234,9 +240,9 @@ CREATE TABLE IF NOT EXISTS library_loans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------
--- 2. NORMALISE EXISTING TABLE COLLATIONS
---    CREATE TABLE IF NOT EXISTS does not change older tables.
---    These ALTER statements fix old general_ci/unicode_ci mixtures.
+-- 2. NORMALISE TABLE COLLATIONS
+--    Keep all tables on the same utf8mb4 collation for consistent text
+--    comparisons across MySQL and TiDB.
 -- ------------------------------------------------
 
 ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -461,7 +467,7 @@ VALUES (1,'Neha Verma','neha.verma@example.com','I would like a visitor pass for
 INSERT INTO notices (title,body,visibility,created_by,created_at)
 SELECT n.title,n.body,n.visibility,admin.id,n.created_at
 FROM (
-    SELECT 'Welcome to Airforce School' title,'This demo campus is open for visitors. Sign in with a school account to see results, attendance, and the calendar.' body,'public' visibility,'2026-10-28 10:54:11' created_at
+    SELECT 'Welcome to Air Force School' title,'This demo campus is open for visitors. Sign in with a school account to see results, attendance, and the calendar.' body,'public' visibility,'2026-10-28 10:54:11' created_at
     UNION ALL SELECT 'Annual sports day','House matches begin next Friday. Students should bring house colours. Parents are welcome in the afternoon.','public','2026-10-28 10:54:11'
     UNION ALL SELECT 'Term 1 result meeting','Teachers will discuss Term 1 scores with linked parents this Thursday after assembly. Students should bring their report printout.','school','2026-10-28 10:54:11'
     UNION ALL SELECT 'Parent-Teacher Meeting - November','Parent-teacher meetings will be held on 14 November 2026. Parents should confirm their preferred time with the class teacher.','school','2026-10-29 09:00:00'
@@ -496,7 +502,7 @@ VALUES
 (1,2,'2026-10-27','present',1,1,'2026-10-27 18:25:07','2026-10-27 18:25:07'),
 (2,5,'2026-10-27','present',4,4,'2026-10-28 10:54:11','2026-10-28 10:54:11'),
 (3,5,'2026-10-26','present',4,4,'2026-10-28 10:54:11','2026-10-28 10:54:11'),
-(4,5,'2026-10-25','absent',4,4,'2026-10-28 10:54:11','2026-10-28 10:54:11');
+(4,5,'2026-10-23','absent',4,4,'2026-10-28 10:54:11','2026-10-28 10:54:11');
 
 INSERT IGNORE INTO teacher_attendance
     (id,teacher_id,attendance_date,status,recorded_by,updated_by,created_at,updated_at)
@@ -509,7 +515,7 @@ INSERT IGNORE INTO student_attendance
 WITH RECURSIVE calendar_dates AS (
     SELECT DATE('2026-06-01') attendance_date
     UNION ALL
-    SELECT attendance_date + INTERVAL 1 DAY
+    SELECT CAST(attendance_date + INTERVAL 1 DAY AS DATE)
     FROM calendar_dates
     WHERE attendance_date < DATE('2026-10-19')
 ), school_days AS (
@@ -534,7 +540,7 @@ INSERT IGNORE INTO teacher_attendance
 WITH RECURSIVE calendar_dates AS (
     SELECT DATE('2026-06-01') attendance_date
     UNION ALL
-    SELECT attendance_date + INTERVAL 1 DAY
+    SELECT CAST(attendance_date + INTERVAL 1 DAY AS DATE)
     FROM calendar_dates
     WHERE attendance_date < DATE('2026-10-19')
 ), school_days AS (
@@ -560,7 +566,7 @@ INSERT INTO results
 WITH RECURSIVE calendar_dates AS (
     SELECT DATE('2026-06-01') assessment_date
     UNION ALL
-    SELECT assessment_date + INTERVAL 1 DAY
+    SELECT CAST(assessment_date + INTERVAL 1 DAY AS DATE)
     FROM calendar_dates
     WHERE assessment_date < DATE('2026-10-19')
 ), school_days AS (
@@ -620,7 +626,7 @@ FROM (
     UNION ALL SELECT 'XII','Science','Chemistry','Chemical kinetics worksheet','Complete the numerical problems on rate laws and half-life.','2026-11-06'
     UNION ALL SELECT 'XII','Science','Mathematics','Differential calculus practice','Complete the assigned derivative and application-of-derivatives problems.','2026-11-05'
     UNION ALL SELECT 'XII','Science','English','Flamingo chapter reflection','Write a 250-word reflection on the prescribed prose chapter.','2026-11-07'
-    UNION ALL SELECT 'XII','Science','Computer Applications','SQL query practice','Write and test queries using SELECT, GROUP BY, ORDER BY and JOIN.','2026-11-08'
+    UNION ALL SELECT 'XII','Science','Computer Science','SQL query practice','Write and test queries using SELECT, GROUP BY, ORDER BY and JOIN.','2026-11-08'
     UNION ALL SELECT 'XI','Commerce','Accountancy','Journal entries exercise','Prepare journal entries for the transactions in Exercise 4.','2026-11-04'
     UNION ALL SELECT 'XI','Commerce','Business Studies','Forms of business organisation','Create a comparison chart of the major forms of business organisation.','2026-11-06'
     UNION ALL SELECT 'XI','Commerce','Economics','Demand schedule activity','Prepare a demand schedule and draw the corresponding demand curve.','2026-11-05'
@@ -662,6 +668,7 @@ WHERE NOT EXISTS (
 -- ------------------------------------------------
 -- 7. TIMETABLE
 -- ------------------------------------------------
+-- weekday uses Monday=1 through Sunday=7 in this demo dataset.
 
 INSERT INTO timetable_slots
     (class_name,section,weekday,start_time,end_time,subject_name,teacher_id,room,created_by)
@@ -672,7 +679,7 @@ FROM (
     UNION ALL SELECT 'XII','Science',2,'08:50:00','09:35:00','Chemistry','ramesh.teacher@airforceschool.demo','Block A - Room 101'
     UNION ALL SELECT 'XII','Science',3,'09:40:00','10:25:00','Mathematics','sunita.teacher@airforceschool.demo','Block A - Room 101'
     UNION ALL SELECT 'XII','Science',4,'10:45:00','11:30:00','English','manoj.teacher@airforceschool.demo','Block A - Room 101'
-    UNION ALL SELECT 'XII','Science',5,'11:35:00','12:20:00','Computer Applications','pooja.teacher@airforceschool.demo','Block A - Room 101'
+    UNION ALL SELECT 'XII','Science',5,'11:35:00','12:20:00','Computer Science','pooja.teacher@airforceschool.demo','Block A - Room 101'
     UNION ALL SELECT 'XI','Commerce',1,'08:50:00','09:35:00','Accountancy','alok.teacher@airforceschool.demo','Block B - Room 102'
     UNION ALL SELECT 'XI','Commerce',2,'09:40:00','10:25:00','Business Studies','deepika.teacher@airforceschool.demo','Block B - Room 102'
     UNION ALL SELECT 'XI','Commerce',3,'10:45:00','11:30:00','Economics','vikas.teacher@airforceschool.demo','Block B - Room 102'
@@ -878,22 +885,18 @@ SELECT
   (SELECT COUNT(*) FROM results WHERE term LIKE 'Daily Assessment Day %' AND created_at >= '2026-06-01' AND created_at < '2026-10-20') AS daily_result_rows,
   (SELECT COUNT(*) FROM parent_students) AS parent_child_links,
   (SELECT COUNT(*) FROM fee_invoices) AS fee_invoice_rows,
+  (SELECT COUNT(*) FROM fee_payment_transactions) AS fee_transaction_rows,
   (SELECT COUNT(*) FROM library_books) AS library_book_rows,
-  (SELECT COUNT(*) FROM homework_assignments) AS homework_rows;
+  (SELECT COUNT(*) FROM library_loans) AS library_loan_rows,
+  (SELECT COUNT(*) FROM homework_assignments) AS homework_rows,
+  (SELECT COUNT(*) FROM notices) AS notice_rows,
+  (SELECT COUNT(*) FROM calendar_events) AS calendar_event_rows;
 
 -- Optional verification: all GradeSphere tables should now report
 -- utf8mb4_unicode_ci for their table collation.
+SELECT TABLE_NAME,TABLE_COLLATION
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA='gradesphere'
+ORDER BY TABLE_NAME;
 
-USE gradesphere;
 
-SHOW TABLES;
-
-SELECT role, COUNT(*) AS total
-FROM users
-GROUP BY role;
-
-SELECT COUNT(*) AS total_books
-FROM library_books;
-
-SELECT COUNT(*) AS total_invoices
-FROM fee_invoices;
